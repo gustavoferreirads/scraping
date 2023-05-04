@@ -1,0 +1,41 @@
+
+service: imdb
+
+app: imdb-scraper
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  environment:
+    S3_BUCKET_NAME: "a2zport-scraping-storage"
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource: !Sub
+        - "arn:aws:s3:::#{BucketName}/*"
+        - BucketName: "a2zport-scraping-storage"
+
+package:
+  include:
+    - handler.py
+  exclude:
+    - "./**"
+
+functions:
+  imdbScraper:
+    handler: handler.scrape
+
+resources:
+  - AWSTemplateFormatVersion: "2010-09-09"
+    Transform: "AWS::Serverless-2016-10-31"
+
+plugins:
+  - serverless-cloudformation-sub-variables
+  - serverless-python-requirements
+custom:
+  pythonRequirements:
+    slim: true # Omits tests, __pycache__, *.pyc etc from dependencies
+    fileName: requirements.txt
